@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PetshopMordecai;
 
 namespace PetshopMordecai.Controllers
 {
@@ -12,36 +13,97 @@ namespace PetshopMordecai.Controllers
     [ApiController]
     public class VendasController : ControllerBase
     {
-        // GET: api/<VendasController>
+        private readonly PETSHOPMORDECAIContext _context;
+
+        public VendasController(PETSHOPMORDECAIContext context)
+        {
+            _context = context;
+        }
+
+        // GET: api/Vendas
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<ActionResult<IEnumerable<Venda>>> GetVenda()
         {
-            return new string[] { "value1", "value2" };
+            return await _context.Venda.ToListAsync();
         }
 
-        // GET api/<VendasController>/5
+        // GET: api/Vendas/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<ActionResult<Venda>> GetVenda(int id)
         {
-            return "value";
+            var venda = await _context.Venda.FindAsync(id);
+
+            if (venda == null)
+            {
+                return NotFound();
+            }
+
+            return venda;
         }
 
-        // POST api/<VendasController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-        // PUT api/<VendasController>/5
+        // PUT: api/Vendas/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for
+        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<IActionResult> PutVenda(int id, Venda venda)
         {
+            if (id != venda.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(venda).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!VendaExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        // DELETE api/<VendasController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        // POST: api/Vendas
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for
+        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
+        [HttpPost]
+        public async Task<ActionResult<Venda>> PostVenda(Venda venda)
         {
+            _context.Venda.Add(venda);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetVenda", new { id = venda.Id }, venda);
+        }
+
+        // DELETE: api/Vendas/5
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<Venda>> DeleteVenda(int id)
+        {
+            var venda = await _context.Venda.FindAsync(id);
+            if (venda == null)
+            {
+                return NotFound();
+            }
+
+            _context.Venda.Remove(venda);
+            await _context.SaveChangesAsync();
+
+            return venda;
+        }
+
+        private bool VendaExists(int id)
+        {
+            return _context.Venda.Any(e => e.Id == id);
         }
     }
 }
